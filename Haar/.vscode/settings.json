@@ -1,0 +1,3 @@
+{
+    "cmake.sourceDirectory": "${workspaceFolder}/build/3rdparty/ade/ade-0.1.1f"
+}
