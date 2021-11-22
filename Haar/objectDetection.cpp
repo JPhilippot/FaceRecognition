@@ -17,15 +17,6 @@ CascadeClassifier eyes_cascade;
 /** @function main */
 int main( int argc, const char** argv )
 {
-    // CommandLineParser parser(argc, argv,
-    //                          "{help h||}"
-    //                          "{face_cascade|data/haarcascades/haarcascade_frontalface_alt.xml|Path to face cascade.}"
-    //                          "{eyes_cascade|data/haarcascades/haarcascade_eye_tree_eyeglasses.xml|Path to eyes cascade.}"
-    //                          "{camera|0|Camera device number.}");
-
-    // parser.about( "\nThis program demonstrates using the cv::CascadeClassifier class to detect objects (Face + eyes) in a video stream.\n"
-    //               "You can use Haar or LBP features.\n\n" );
-    // parser.printMessage();
     if (argc != 2){
         
         cout << "--(!)Usage error !\n Usage :  " <<argv[0]<<" your_path_to_image \n";
@@ -45,34 +36,6 @@ int main( int argc, const char** argv )
         cout << "--(!)Error loading eyes cascade\n";
         return -1;
     };
-
-    // int camera_device = parser.get<int>("camera");
-    // VideoCapture capture;
-    // //-- 2. Read the video stream
-    // capture.open( "./img/j1.jpg" );
-    // if ( ! capture.isOpened() )
-    // {
-    //     cout << "--(!)Error opening video capture\n";
-    //     return -1;
-    // }
-
-    // Mat frame;
-    // while ( capture.read(frame) )
-    // {
-    //     if( frame.empty() )
-    //     {
-    //         cout << "--(!) No captured frame -- Break!\n";
-    //         break;
-    //     }
-
-    //     //-- 3. Apply the classifier to the frame
-    //     detectAndDisplay( frame );
-
-    //     if( waitKey(10) == 27 )
-    //     {
-    //         break; // escape
-    //     }
-    // }
     Mat frame = imread(argv[1]);
     if( frame.empty() )
         {
@@ -81,11 +44,6 @@ int main( int argc, const char** argv )
 
         //-- 3. Apply the classifier to the frame
         detectAndDisplay( frame );
-
-        // if( waitKey(10) == 27 )
-        // {
-        //     break; // escape
-        // }
     return 0;
 }
 
@@ -102,17 +60,20 @@ void detectAndDisplay( Mat frame )
 
     for ( size_t i = 0; i < faces.size(); i++ )
     {
-        int fh =faces[i].height; 
-        int fw = faces[i].width; 
-        int fx =faces[i].x; 
-        int fy = faces[i].y;
-        cout <<i<<"-fh="<<fh<<"-fw="<<fw<<"-fx="<<fx<<"-fy="<<fy<<"\n";
-        Mat croppedFace = frame(Rect(fx,fy,fw,fh));
-        imwrite("./img/cropped.jpg",croppedFace);
-        
-        
+        int fh =faces[i].height - (faces[i].height * 0.2); // We want something more cropped than the default values
+        int fw = faces[i].width - (faces[i].width * 0.3); 
+        int fx =faces[i].x + (faces[i].width * 0.15); 
+        int fy = faces[i].y + (faces[i].height * 0.1);
         Point center( faces[i].x + faces[i].width/2, faces[i].y + faces[i].height/2 );
-        ellipse( frame, center, Size( faces[i].width/2, faces[i].height/2 ), 0, 0, 360, Scalar( 255, 0, 255 ), 4 );
+        
+        ellipse( frame, center, Size( 1, 1 ), 0, 0, 360, Scalar( 0, 0, 255 ), 6 );
+        cout <<i<<"-fh="<<fh<<"-fw="<<fw<<"-fx="<<fx<<"-fy="<<fy<<"\n";
+        Mat croppedFace = frame(Rect(fx,fy,fw,fh)); 
+        imwrite("./img/cropped"+std::to_string(i)+".jpg",croppedFace);
+        
+        
+        // Point center( faces[i].x + faces[i].width/2, faces[i].y + faces[i].height/2 );
+        ellipse( frame, center, Size( faces[i].width/2, faces[i].height/2 ), 0, 0, 360, Scalar( 255, 255, 255 ), 4 );
         Mat faceROI = frame_gray( faces[i] );
         
         //-- In each face, detect eyes
@@ -129,7 +90,7 @@ void detectAndDisplay( Mat frame )
 
     //-- Show what you got
     namedWindow("Capture - Face detection", WINDOW_NORMAL);
-    resizeWindow("Capture - Face detection", 1200, 700);
+    resizeWindow("Capture - Face detection", 1200, 700);// to fix issues where the image is bigger than the screen
     imshow( "Capture - Face detection", frame );
     waitKey(0);
 
