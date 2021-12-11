@@ -1,13 +1,15 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <stdlib.h>
+#include <memory.h>
 
 #define BUFSIZE 128
-
-int parse_output(void)
+char *cmd;
+static gint parse_output(void)
 {
-  char *cmd = "ls -l";
-
+  // char *cmd;
+  // cmd = (char *)data;
+  g_print("Trying to compute %s \n", cmd);
   char buf[BUFSIZE];
   FILE *fp;
 
@@ -77,6 +79,8 @@ static void openImage(GtkWidget *button)
   GtkWidget *parent_window;
   GtkWidget *halign, *halignRButton;
   GtkWidget *LBPbutton, *Ebutton, *CNNbutton;
+  char *imagename;
+
   // This is used to get the parent window, i.e the one that contains the button that called this callback
   GdkWindow *gtk_window = gtk_widget_get_parent_window(button);
   parent_window = NULL;
@@ -90,35 +94,6 @@ static void openImage(GtkWidget *button)
   rButtonVBox = gtk_hbox_new(TRUE, 0);
   gtk_container_add(GTK_CONTAINER(parent_window), pVBox);
 
-  // redrawing new button
-  button = gtk_button_new_with_label("Open another image");
-  gtk_widget_set_tooltip_text(button, "Select another image for recognition");
-  g_signal_connect(G_OBJECT(button), "clicked",
-                   G_CALLBACK(button_openImage), (gpointer)&parent_window);
-  halign = gtk_alignment_new(0, 0, 0, 0);
-  gtk_container_add(GTK_CONTAINER(halign), button);
-
-  halignRButton = gtk_alignment_new(0.5, 0, 0, 0);
-  LBPbutton = gtk_button_new_with_label("LBP");
-  gtk_widget_set_tooltip_text(LBPbutton, "Launch a recognition using LBP");
-  g_signal_connect(G_OBJECT(LBPbutton), "clicked",
-                   G_CALLBACK(parse_output), NULL);
-  gtk_container_add(GTK_CONTAINER(rButtonVBox), LBPbutton);
-
-  Ebutton = gtk_button_new_with_label("EigenFaces");
-  gtk_widget_set_tooltip_text(Ebutton, "Launch a recognition using EigenFaces");
-  g_signal_connect(G_OBJECT(Ebutton), "clicked",
-                   G_CALLBACK(NULL), NULL);
-  gtk_container_add(GTK_CONTAINER(rButtonVBox), Ebutton);
-
-  CNNbutton = gtk_button_new_with_label("CNN");
-  gtk_widget_set_tooltip_text(CNNbutton, "Launch a recognition using CNN");
-  g_signal_connect(G_OBJECT(CNNbutton), "clicked",
-                   G_CALLBACK(NULL), NULL);
-  gtk_container_add(GTK_CONTAINER(rButtonVBox), CNNbutton);
-
-  gtk_container_add(GTK_CONTAINER(halignRButton), rButtonVBox);
-  // Dialog box to choose the image
   dialog = gtk_file_chooser_dialog_new("Open File",
                                        parent_window,
                                        action,
@@ -135,20 +110,60 @@ static void openImage(GtkWidget *button)
     char *filename;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
     filename = gtk_file_chooser_get_filename(chooser);
+    imagename = (char*) malloc(1+ strlen(filename));
+    strcpy(imagename,filename);
     g_print("filename in callback %s\n",
             filename);
-
+    printf("imagename %s\n",imagename);
     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(filename, NULL);
     pixbuf = gdk_pixbuf_scale_simple(pixbuf, HEIGHT, WIDTH, GDK_INTERP_BILINEAR);
     image = gtk_image_new_from_pixbuf(pixbuf);
 
     g_free(filename);
   }
+
+  // redrawing new button
+  button = gtk_button_new_with_label("Open another image");
+  gtk_widget_set_tooltip_text(button, "Select another image for recognition");
+  g_signal_connect(G_OBJECT(button), "clicked",
+                   G_CALLBACK(button_openImage), (gpointer)&parent_window);
+  halign = gtk_alignment_new(0, 0, 0, 0);
+  gtk_container_add(GTK_CONTAINER(halign), button);
+  char *tmp = "objectDetection ";
+  printf("tmp %s \n", tmp);
+  cmd = (char *)malloc(1 + strlen(tmp) + strlen(imagename));
+
+  strcpy(cmd, tmp);
+  strcat(cmd, imagename);
+  printf("cmd %s \n", cmd);
+  halignRButton = gtk_alignment_new(0.5, 0, 0, 0);
+  LBPbutton = gtk_button_new_with_label("LBP");
+  gtk_widget_set_tooltip_text(LBPbutton, "Launch a recognition using LBP");
+  g_signal_connect(G_OBJECT(LBPbutton), "clicked",
+                   G_CALLBACK(parse_output), NULL);
+
+  gtk_container_add(GTK_CONTAINER(rButtonVBox), LBPbutton);
+
+  Ebutton = gtk_button_new_with_label("EigenFaces");
+  gtk_widget_set_tooltip_text(Ebutton, "Launch a recognition using EigenFaces");
+  g_signal_connect(G_OBJECT(Ebutton), "clicked",
+                   G_CALLBACK(NULL), NULL);
+  gtk_container_add(GTK_CONTAINER(rButtonVBox), Ebutton);
+
+  CNNbutton = gtk_button_new_with_label("CNN");
+  gtk_widget_set_tooltip_text(CNNbutton, "Launch a recognition using CNN");
+  g_signal_connect(G_OBJECT(CNNbutton), "clicked",
+                   G_CALLBACK(NULL), NULL);
+  gtk_container_add(GTK_CONTAINER(rButtonVBox), CNNbutton);
+
+  gtk_container_add(GTK_CONTAINER(halignRButton), rButtonVBox);
+  // Dialog box to choose the image
   gtk_box_pack_start(GTK_BOX(pVBox), halign, FALSE, FALSE, 5);
   gtk_box_pack_start(GTK_BOX(pVBox), image, FALSE, FALSE, 5);
   gtk_box_pack_start(GTK_BOX(pVBox), halignRButton, FALSE, FALSE, 0);
   gtk_widget_show_all(parent_window);
   gtk_widget_destroy(dialog);
+  
 }
 
 // updateWindow(GtkWidget *event_box,
@@ -166,9 +181,9 @@ int main(int argc, char *argv[])
   GtkWidget *window;
   GtkWidget *button;
   GtkWidget *halign;
-  GtkWidget *image = NULL;
+  // GtkWidget *image = NULL;
   GtkWidget *pVBox;
-  char *imagename;
+  // char *imagename;
   // bool *needUpdate;
   // *needUpdate = false;
   gtk_init(&argc, &argv);
