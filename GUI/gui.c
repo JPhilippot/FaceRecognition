@@ -1,5 +1,37 @@
 #include <gtk/gtk.h>
 #include <string.h>
+#include <stdlib.h>
+
+#define BUFSIZE 128
+
+int parse_output(void)
+{
+  char *cmd = "ls -l";
+
+  char buf[BUFSIZE];
+  FILE *fp;
+
+  if ((fp = popen(cmd, "r")) == NULL)
+  {
+    printf("Error opening pipe!\n");
+    return -1;
+  }
+
+  while (fgets(buf, BUFSIZE, fp) != NULL)
+  {
+    // Do whatever you want here...
+    printf("OUTPUT: %s", buf);
+  }
+
+  if (pclose(fp))
+  {
+    printf("Command not found or exited with error status\n");
+    return -1;
+  }
+
+  return 0;
+}
+
 float HEIGHT = 800;
 float WIDTH = 600;
 
@@ -70,7 +102,7 @@ static void openImage(GtkWidget *button)
   LBPbutton = gtk_button_new_with_label("LBP");
   gtk_widget_set_tooltip_text(LBPbutton, "Launch a recognition using LBP");
   g_signal_connect(G_OBJECT(LBPbutton), "clicked",
-                   G_CALLBACK(NULL), NULL);
+                   G_CALLBACK(parse_output), NULL);
   gtk_container_add(GTK_CONTAINER(rButtonVBox), LBPbutton);
 
   Ebutton = gtk_button_new_with_label("EigenFaces");
@@ -85,7 +117,7 @@ static void openImage(GtkWidget *button)
                    G_CALLBACK(NULL), NULL);
   gtk_container_add(GTK_CONTAINER(rButtonVBox), CNNbutton);
 
-gtk_container_add(GTK_CONTAINER(halignRButton), rButtonVBox);
+  gtk_container_add(GTK_CONTAINER(halignRButton), rButtonVBox);
   // Dialog box to choose the image
   dialog = gtk_file_chooser_dialog_new("Open File",
                                        parent_window,
